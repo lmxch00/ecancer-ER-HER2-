@@ -1,0 +1,33 @@
+SEEDS — random seeds used in the ecancer revision reproducibility scripts
+============================================================================
+
+All seeds are embedded as fixed constants inside the scripts. To reproduce the
+reported numbers exactly, run the scripts unchanged on the same input data.
+
+extension_analysis.py  (HER2-sensitivity / post-hoc power / 2000-perm null / ER baseline)
+  - SEED = 42
+        np.random.default_rng(42)            # primary RNG for all permutations
+  - random_state = 42
+        sklearn LogisticRegression inside fit_pred()   # model weight init / solver
+  - seed = 7
+        auc_with_ci(y, pred, n_boot=2000, seed=7)      # 95% CI bootstrap
+  - seed = 123
+        simulate_observed_auc(A, S=2000, seed=123)     # post-hoc power simulation
+
+rerun_jenci.py  (already committed to GitHub: lmxch00/ecancer-ER-HER2-)
+  - SEED = 42
+        np.random.seed(42)                   # legacy global seed
+        np.random.default_rng(42)            # permutation RNG
+  - random_state = 42
+        sklearn LogisticRegression (pre-spec + bootstrap models)
+  - random_state = b
+        bootstrap loop index b (0..B-1)      # deterministic per-iteration seed
+
+make_figure1.py  (regenerates Figure 1 + figure1_numbers.json)
+  - No stochastic step. Histogram/CI are computed from the saved
+    permutation_randomgene_null_2000.csv; fixed reference AUCs are hard-coded
+    constants (OBSERVED=0.569, ER_AUC=0.717, etc.). Fully deterministic.
+
+SUMMARY OF SEEDS: 42 (primary), 7 (bootstrap CI), 123 (power sim).
+To change any seed, edit the corresponding constant at the top of the function
+or module before re-running.

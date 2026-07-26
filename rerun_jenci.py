@@ -8,8 +8,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix
 
-PROC = r"E:/000000paper/001已经投稿/06/110/processed"
-OUT  = r"E:/000000paper/001已经投稿/06/110/rerun_20260723"
+HERE = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(HERE, 'data')   # place processed GEO CSVs here (see README)
+OUT = HERE
 os.makedirs(OUT, exist_ok=True)
 SEED = 42
 np.random.seed(SEED)
@@ -19,8 +20,8 @@ def load_expr(path):
     return pd.read_csv(path, index_col=0)
 
 # ---------- Load & align probes ----------
-xt = load_expr(os.path.join(PROC, 'X_GSE20194.csv'))
-xv = load_expr(os.path.join(PROC, 'X_GSE25066.csv'))
+xt = load_expr(os.path.join(DATA_DIR, 'X_GSE20194.csv'))
+xv = load_expr(os.path.join(DATA_DIR, 'X_GSE25066.csv'))
 if 'ID_REF' in xt.columns:
     xt = xt.drop(columns=['ID_REF'])          # stray column in GSE20194
 common = xt.columns.intersection(xv.columns)
@@ -28,7 +29,7 @@ xt = xt[common]; xv = xv[common]
 print(f"Common probes aligned: {len(common)}")
 
 # ---------- Training clinical (GSE20194) ----------
-ct = pd.read_csv(os.path.join(PROC, 'GSE20194_clinical_labels.csv')).set_index('Sample_geo_accession')
+ct = pd.read_csv(os.path.join(DATA_DIR, 'GSE20194_clinical_labels.csv')).set_index('Sample_geo_accession')
 ct = ct.loc[ct.index.intersection(xt.index)]
 xt = xt.loc[ct.index]
 er   = ct['characteristics: ER_status'].values
@@ -38,7 +39,7 @@ Xtr_full = xt[mask_tr].values.astype(float); ytr = pcr[mask_tr]
 print(f"[Train ER+] n={len(ytr)} pCR={ytr.sum()} ({ytr.mean():.1%})")
 
 # ---------- Validation clinical (GSE25066 ER+/HER2-) ----------
-cv_raw = pd.read_csv(os.path.join(PROC, 'clinical_GSE25066.csv'))
+cv_raw = pd.read_csv(os.path.join(DATA_DIR, 'clinical_GSE25066.csv'))
 cv = cv_raw.set_index(cv_raw.columns[0])
 cv = cv.loc[cv.index.intersection(xv.index)]
 xv = xv.loc[cv.index]
